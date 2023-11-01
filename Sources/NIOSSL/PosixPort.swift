@@ -36,10 +36,17 @@ internal typealias FILEPointer = OpaquePointer
 internal typealias FILEPointer = UnsafeMutablePointer<FILE>
 #endif
 
+// fclose has an non optional file pointer for linux glibc version 2.38
+#if os(Linux)
+internal typealias SYSFILEPointer = FILEPointer
+#else
+internal typealias SYSFILEPointer = Optional<FILEPointer>
+#endif
+
 private let sysFopen: @convention(c) (UnsafePointer<CChar>?, UnsafePointer<CChar>?) -> FILEPointer? = fopen
 private let sysMlock: @convention(c) (UnsafeRawPointer?, size_t) -> CInt = mlock
 private let sysMunlock: @convention(c) (UnsafeRawPointer?, size_t) -> CInt = munlock
-private let sysFclose: @convention(c) (FILEPointer?) -> CInt = fclose
+private let sysFclose: @convention(c) (SYSFILEPointer) -> CInt = fclose
 
 // Sadly, stat, lstat, and readlink have different signatures with glibc and macOS libc.
 #if canImport(Darwin) || os(Android)
